@@ -92,3 +92,9 @@ trap(struct trapframe *tf)
   if(cp && cp->state == RUNNING && tf->trapno == IRQ_OFFSET+IRQ_TIMER)
     yield();
 }
+
+
+int
+sys_ticks(void) {
+   return ticks;
+}

@@ -80,6 +80,9 @@ vectors.S: vectors.pl
 
 ULIB = ulib.o usys.o printf.o umalloc.o
 
+ticks.o:
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) -ggdb3 ticks.c
+
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
 	$(OBJDUMP) -S $@ > $*.asm
@@ -109,6 +112,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_ticks\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

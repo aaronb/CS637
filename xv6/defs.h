@@ -144,6 +144,12 @@ extern int      ticks;
 void            tvinit(void);
 extern struct spinlock tickslock;
 
+// trace.c
+void 		st_init(void);
+void		st_add(struct proc *);
+void 		st_print(void);
+
+
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 

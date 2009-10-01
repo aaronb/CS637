@@ -217,6 +217,9 @@ console_intr(int (*getc)(void))
         cons_putc(BACKSPACE);
       }
       break;
+    case C('T'):  //Trace
+      st_print();
+      break;
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         input.buf[input.e++ % INPUT_BUF] = c;

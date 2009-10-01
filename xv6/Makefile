@@ -24,6 +24,7 @@ OBJS = \
 	trapasm.o\
 	trap.o\
 	vectors.o\
+	trace.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 #TOOLPREFIX = i386-jos-elf-
@@ -36,7 +37,7 @@ AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
-CFLAGS = -fno-builtin -O2 -Wall -MD -ggdb -m32
+CFLAGS = -fno-builtin -O2 -Wall -MD -ggdb -m32 -DSTRACE
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 ASFLAGS = -m32
 # FreeBSD ld wants ``elf_i386_fbsd''
@@ -113,9 +114,10 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_ticks\
+	_schdtest\
 
 fs.img: mkfs README $(UPROGS)
-	./mkfs fs.img README $(UPROGS)
+	./mkfs fs.img $(UPROGS)
 
 -include *.d
 
@@ -143,3 +145,5 @@ bochs : fs.img xv6.img
 qemu: fs.img xv6.img
 	qemu -parallel stdio -hdb fs.img xv6.img
 
+pub: fs.img xv6.img
+	rsync fs.img xv6.img abrown@upl.cs.wisc.edu:public_html/xv6/

@@ -5,6 +5,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "trace.h"
 
 struct spinlock proc_table_lock;
 
@@ -204,6 +205,10 @@ scheduler(void)
   struct cpu *c;
   int i;
 
+#ifdef STRACE
+st_init();
+#endif
+
   c = &cpus[cpu()];
   for(;;){
     // Enable interrupts on this processor.
@@ -222,6 +227,11 @@ scheduler(void)
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
+
+#ifdef STRACE
+	st_add(p);
+#endif
+		
       swtch(&c->context, &p->context);
 
       // Process is done running for now.

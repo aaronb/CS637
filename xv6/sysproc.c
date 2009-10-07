@@ -13,7 +13,10 @@ sys_fork(void)
   if((np = copyproc(cp)) == 0)
     return -1;
   pid = np->pid;
-  np->state = RUNNABLE;
+#ifdef LOTTERY
+  np->tickets = NEW_PROC_TICKETS;
+#endif
+  setstate(np, RUNNABLE);
   return pid;
 }
 

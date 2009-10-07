@@ -24,8 +24,6 @@ struct context {
   int ebp;
 };
 
-enum proc_state { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
-
 // Per-process state
 struct proc {
   char *mem;                // Start of process memory (kernel address)
@@ -41,6 +39,9 @@ struct proc {
   struct context context;   // Switch here to run process
   struct trapframe *tf;     // Trap frame for current interrupt
   char name[16];            // Process name (debugging)
+#ifdef LOTTERY
+  int tickets;
+#endif
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -67,3 +68,9 @@ extern int ncpu;
 // "cp" is a short alias for curproc().
 // It gets used enough to make this worthwhile.
 #define cp curproc()
+
+#ifdef LOTTERY
+  int tickets;    //total tickets of runnable or running processes
+#define INIT_TICKETS 100
+#define NEW_PROC_TICKETS 100
+#endif

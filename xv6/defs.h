@@ -7,6 +7,9 @@ struct proc;
 struct spinlock;
 struct stat;
 
+enum proc_state { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+
+
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
@@ -105,6 +108,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+void  setstate(struct proc *, enum proc_state);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

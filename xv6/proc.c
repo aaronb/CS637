@@ -35,7 +35,7 @@ allocproc(void)
   for(i = 0; i < NPROC; i++){
     p = &proc[i];
     if(p->state == UNUSED){
-      p->state = EMBRYO;
+      setstate(p, EMBRYO);
       p->pid = nextpid++;
       release(&proc_table_lock);
       return p;
@@ -112,7 +112,7 @@ copyproc(struct proc *p)
 
   // Allocate kernel stack.
   if((np->kstack = kalloc(KSTACKSIZE)) == 0){
-    np->state = UNUSED;
+    np->state = UNUSED; 
     return 0;
   }
   np->tf = (struct trapframe*)(np->kstack + KSTACKSIZE) - 1;
@@ -174,8 +174,12 @@ userinit(void)
   p->tf->eip = 0;
   memmove(p->mem, _binary_initcode_start, (int)_binary_initcode_size);
   safestrcpy(p->name, "initcode", sizeof(p->name));
-  p->state = RUNNABLE;
-  
+#ifdef LOTTERY
+  p->tickets = INIT_TICKETS;
+#endif
+  p->state = UNUSED;
+  setstate(p, RUNNABLE);
+
   initproc = p;
 }
 
@@ -190,6 +194,43 @@ curproc(void)
   popcli();
   return p;
 }
+
+//TODO: check for race conditions
+void 
+setstate(struct proc *p, enum proc_state state) 
+{
+#ifdef LOTTERY
+   if (p->state == RUNNABLE || p->state == RUNNING) {
+      if (!(state == RUNNABLE || state == RUNNING)) {
+         //remove tickets from lottery
+         tickets -= p->tickets;
+      }
+   } else {
+      if (state == RUNNABLE || state == RUNNING) {
+         //add tickets to lottery
+         tickets += p->tickets;
+      }
+   }
+#endif
+   //set state
+   p->state = state;
+}
+
+static unsigned long next = 1;
+
+/* RAND_MAX assumed to be 32767 */
+int 
+rand(void) {
+   next = next * 1103515245 + 12345;
+   return((unsigned)(next/65536) % 32768);
+}
+
+void 
+srand(unsigned seed) {
+   next = seed;
+}
+
+
 
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -214,22 +255,41 @@ st_init();
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
     acquire(&proc_table_lock);
+
+    //hold lottery
+#ifdef LOTTERY
+    if (tickets == 0) {
+       release(&proc_table_lock);
+       continue;
+    }
+    //cprintf("tickets: %d\n", tickets); 
+    int winner = rand() / (32767 / tickets + 1);
+    int sum = 0;
+    //cprintf("winner: %d\n", winner);
+#endif
+
+    // Loop over process table looking for process to run.
     for(i = 0; i < NPROC; i++){
       p = &proc[i];
       if(p->state != RUNNABLE)
         continue;
+
+#ifdef LOTTERY
+      sum += p->tickets;
+      if (sum <= winner)
+         continue;
+#endif
 
       // Switch to chosen process.  It is the process's job
       // to release proc_table_lock and then reacquire it
       // before jumping back to us.
       c->curproc = p;
       setupsegs(p);
-      p->state = RUNNING;
+      setstate(p, RUNNING);
 
 #ifdef STRACE
-	st_add(p);
+	   st_add(p);
 #endif
 		
       swtch(&c->context, &p->context);
@@ -238,6 +298,10 @@ st_init();
       // It should have changed its p->state before coming back.
       c->curproc = 0;
       setupsegs(0);
+
+#ifdef LOTTERY
+      break;
+#endif
     }
     release(&proc_table_lock);
 
@@ -266,7 +330,8 @@ void
 yield(void)
 {
   acquire(&proc_table_lock);
-  cp->state = RUNNABLE;
+  //cp->state = RUNNABLE;
+  setstate(cp, RUNNABLE);
   sched();
   release(&proc_table_lock);
 }
@@ -307,7 +372,8 @@ sleep(void *chan, struct spinlock *lk)
 
   // Go to sleep.
   cp->chan = chan;
-  cp->state = SLEEPING;
+//  cp->state = SLEEPING;
+  setstate(cp, SLEEPING);
   sched();
 
   // Tidy up.
@@ -329,7 +395,8 @@ wakeup1(void *chan)
 
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
-      p->state = RUNNABLE;
+      //p->state = RUNNABLE;
+      setstate(p, RUNNABLE);
 }
 
 // Wake up all processes sleeping on chan.
@@ -355,7 +422,7 @@ kill(int pid)
       p->killed = 1;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
-        p->state = RUNNABLE;
+         setstate(p, RUNNABLE);
       release(&proc_table_lock);
       return 0;
     }
@@ -403,7 +470,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   cp->killed = 0;
-  cp->state = ZOMBIE;
+  setstate(cp, ZOMBIE);
   sched();
   panic("zombie exit");
 }
@@ -430,7 +497,7 @@ wait(void)
           kfree(p->mem, p->sz);
           kfree(p->kstack, KSTACKSIZE);
           pid = p->pid;
-          p->state = UNUSED;
+          setstate(p, UNUSED);
           p->pid = 0;
           p->parent = 0;
           p->name[0] = 0;

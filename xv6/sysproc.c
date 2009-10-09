@@ -82,3 +82,37 @@ sys_sleep(void)
   return 0;
 }
 
+ extern struct proc proc[NPROC];
+
+int
+sys_get_tickets() 
+{
+#ifdef LOTTERY
+   int pid;
+   if (argint(0, &pid) < 0)
+      return -1;
+   if (pid >= NPROC || pid < 0)
+      return -2;
+   return proc[pid].tickets;
+#else
+   return -3;
+#endif
+}
+
+int
+sys_set_tickets()
+{
+#ifdef LOTTERY
+   int pid, newt;
+   if (argint(0, &pid) < 0 || argint(1, &newt))
+      return -1;
+   if (pid >= NPROC || pid < 0)
+      return -1;
+   
+   set_tickets(pid, newt);
+ 
+   return 0;
+#else
+   return -1;
+#endif
+}

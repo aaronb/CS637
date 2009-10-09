@@ -109,6 +109,8 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 void  setstate(struct proc *, enum proc_state);
+int  set_tickets(int pid, int newt);
+
 
 // swtch.S
 void            swtch(struct context*, struct context*);

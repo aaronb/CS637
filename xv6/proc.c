@@ -7,9 +7,12 @@
 #include "spinlock.h"
 #include "trace.h"
 
-struct spinlock proc_table_lock;
 
 struct proc proc[NPROC];
+struct spinlock proc_table_lock;
+
+int tickets = 0;
+
 static struct proc *initproc;
 
 int nextpid = 1;
@@ -330,7 +333,6 @@ void
 yield(void)
 {
   acquire(&proc_table_lock);
-  //cp->state = RUNNABLE;
   setstate(cp, RUNNABLE);
   sched();
   release(&proc_table_lock);
@@ -552,7 +554,33 @@ procdump(void)
       for(j=0; j<10 && pc[j] != 0; j++)
         cprintf(" %p", pc[j]);
     }
+#ifdef LOTTERY
+    cprintf(" %d", p->tickets);
+#endif
     cprintf("\n");
   }
+}
+
+
+int
+set_tickets(int pid, int newt)
+{
+   struct proc *p;
+   int i;
+   acquire(&proc_table_lock);
+   for(i = 0; i < NPROC; i++){
+      if (proc[i].pid == pid)
+      {
+         p = &proc[i];
+         if (p->state == RUNNABLE || p->state == RUNNING)
+            tickets += newt - p->tickets;
+         p->tickets = newt;
+         release(&proc_table_lock);
+         //cprintf("total: %d  proc: %d has %d\n", tickets, pid, p->tickets);
+         return 0;
+      }
+   }
+   release(&proc_table_lock);
+   return -1;
 }
 

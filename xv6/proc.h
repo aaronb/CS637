@@ -70,7 +70,9 @@ extern int ncpu;
 #define cp curproc()
 
 #ifdef LOTTERY
-  int tickets;    //total tickets of runnable or running processes
+//  int tickets;    //total tickets of runnable or running processes
 #define INIT_TICKETS 100
-#define NEW_PROC_TICKETS 100
+#define NEW_PROC_TICKETS 200
 #endif
+
+ 

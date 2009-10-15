@@ -561,6 +561,18 @@ procdump(void)
   }
 }
 
+struct proc *
+get_proc(int pid)
+{
+   int i;
+  for(i = 0; i < NPROC; i++){
+      if (proc[i].pid == pid)
+      {
+         return &proc[i];
+      }
+  }
+  return 0;
+}
 
 int
 set_tickets(int pid, int newt)
@@ -568,19 +580,16 @@ set_tickets(int pid, int newt)
    struct proc *p;
    int i;
    acquire(&proc_table_lock);
-   for(i = 0; i < NPROC; i++){
-      if (proc[i].pid == pid)
-      {
-         p = &proc[i];
-         if (p->state == RUNNABLE || p->state == RUNNING)
-            tickets += newt - p->tickets;
-         p->tickets = newt;
-         release(&proc_table_lock);
-         //cprintf("total: %d  proc: %d has %d\n", tickets, pid, p->tickets);
-         return 0;
-      }
+   p = get_proc(pid);
+   if (p == 0)
+   {
+      release(&proc_table_lock);
+      return -1;
    }
+   if (p->state == RUNNABLE || p->state == RUNNING)
+      tickets += newt - p->tickets;
+   p->tickets = newt;
    release(&proc_table_lock);
-   return -1;
+   return 0;
 }
 

@@ -115,12 +115,13 @@ UPROGS=\
 	_schdtest\
 	_tickets\
 	_ltest\
+	_chktest\
 	
 #_forktest\
 #	_usertests\
 
 fs.img: mkfs README $(UPROGS)
-	./mkfs fs.img $(UPROGS)
+	./mkfs fs.img $(UPROGS) README
 
 -include *.d
 

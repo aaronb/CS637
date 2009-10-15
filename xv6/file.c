@@ -105,6 +105,23 @@ fileread(struct file *f, char *addr, int n)
   panic("fileread");
 }
 
+// Check if data in file f at offset is in system buffer
+int
+filebuff(struct file *f, uint offset) 
+{
+  int r;
+  if(f->type == FD_INODE){
+    ilock(f->ip);
+    if(agei(f->ip, offset) > 0)
+       r = 1;
+    else
+       r = 0;
+    iunlock(f->ip);
+    return r;
+  }
+  return 0;
+}
+
 // Write to file f.  Addr is kernel address.
 int
 filewrite(struct file *f, char *addr, int n)

@@ -31,3 +31,4 @@ STUB(sleep)
 STUB(ticks)
 STUB(get_tickets)
 STUB(set_tickets)
+STUB(check);

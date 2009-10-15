@@ -397,6 +397,19 @@ stati(struct inode *ip, struct stat *st)
   st->size = ip->size;
 }
 
+//return age of buffer containing data, or 0 if no buffer
+int
+agei(struct inode *ip, uint off)
+{
+  if (ip->type == T_DEV)
+     return 0;
+
+  if(off > ip->size)
+    return 0;
+
+   return bage(ip->dev, bmap(ip, off/BSIZE, 0));
+}
+
 // Read data from inode.
 int
 readi(struct inode *ip, char *dst, uint off, uint n)

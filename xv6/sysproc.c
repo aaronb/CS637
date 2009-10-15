@@ -91,11 +91,11 @@ sys_get_tickets()
    int pid;
    if (argint(0, &pid) < 0)
       return -1;
-   if (pid >= NPROC || pid < 0)
-      return -2;
-   return proc[pid].tickets;
+   struct proc* p = get_proc(pid);
+   if (p == 0) return -1;
+   return p->tickets;
 #else
-   return -3;
+   return -1;
 #endif
 }
 
@@ -106,12 +106,7 @@ sys_set_tickets()
    int pid, newt;
    if (argint(0, &pid) < 0 || argint(1, &newt))
       return -1;
-   if (pid >= NPROC || pid < 0)
-      return -1;
-   
-   set_tickets(pid, newt);
- 
-   return 0;
+   return set_tickets(pid, newt);
 #else
    return -1;
 #endif

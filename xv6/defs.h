@@ -15,6 +15,7 @@ void            binit(void);
 struct buf*     bread(uint, uint);
 void            brelse(struct buf*);
 void            bwrite(struct buf*);
+int   bage(uint, uint);
 
 // console.c
 void            console_init(void);
@@ -33,6 +34,7 @@ void            fileinit(void);
 int             fileread(struct file*, char*, int n);
 int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
+int   filebuff(struct file*, uint);
 
 // fs.c
 int             dirlink(struct inode*, char*, uint);
@@ -51,6 +53,7 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
+int   agei(struct inode*, uint);
 
 // ide.c
 void            ide_init(void);
@@ -110,6 +113,7 @@ void            wakeup(void*);
 void            yield(void);
 void  setstate(struct proc *, enum proc_state);
 int  set_tickets(int pid, int newt);
+struct proc*   get_proc(int pid);
 
 
 // swtch.S

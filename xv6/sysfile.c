@@ -45,6 +45,16 @@ fdalloc(struct file *f)
 }
 
 int
+sys_check() 
+{
+   struct file *f;
+   uint offset;
+   if (argfd(0, 0, &f) < 0 || argint(2, &offset) < 0 )
+      return -1;
+   return filebuff(f, offset);
+}
+
+int
 sys_read(void)
 {
   struct file *f;

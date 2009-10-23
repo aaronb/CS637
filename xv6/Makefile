@@ -119,7 +119,7 @@ UPROGS=\
 	_chktest\
 
 fs.img: mkfs README $(UPROGS)
-	./mkfs fs.img $(UPROGS) README
+	./mkfs fs.img 2048 $(UPROGS) README
 
 -include *.d
 

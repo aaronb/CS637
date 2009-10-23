@@ -60,7 +60,7 @@ main(int argc, char *argv[])
   struct dinode din;
 
   if(argc < 2){
-    fprintf(stderr, "Usage: mkfs fs.img files...\n");
+    fprintf(stderr, "Usage: mkfs fs.img blocks files...\n");
     exit(1);
   }
 
@@ -74,15 +74,20 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  sb.size = xint(size);
-  sb.nblocks = xint(nblocks); // so whole disk is size sectors
-  sb.ninodes = xint(ninodes);
-
+  size = atoi(argv[2]);
+  
   bitblocks = size / BPB + 1; 
   usedblocks = ninodes / IPB + 3 + bitblocks;
   freeblock = usedblocks;
 
-  printf("used %d (bit %d ninode %lu) free %u total %d\n", usedblocks,
+  //remaining blocks are data blocks
+  nblocks = size - usedblocks;
+
+  sb.size = xint(size);
+  sb.nblocks = xint(nblocks); // so whole disk is size sectors
+  sb.ninodes = xint(ninodes);
+
+    printf("used %d (bit %d ninode %lu) free %u total %d\n", usedblocks,
          bitblocks, ninodes/IPB + 1, freeblock, nblocks+usedblocks);
 
   //data + metadata = whole disk
@@ -110,7 +115,7 @@ main(int argc, char *argv[])
   strcpy(de.name, "..");
   iappend(rootino, &de, sizeof(de));
 
-  for(i = 2; i < argc; i++){
+  for(i = 3; i < argc; i++){
     assert(index(argv[i], '/') == 0);
 
     if((fd = open(argv[i], 0)) < 0){
@@ -289,6 +294,7 @@ iappend(uint inum, void *xp, int n)
       x = xint(indirect[fbn-NDIRECT]);
     }
     n1 = min(n, (fbn + 1) * BSIZE - off);
+    assert(x < size);
     rsect(x, buf);
     bcopy(p, buf + off - (fbn * BSIZE), n1);
     wsect(x, buf);

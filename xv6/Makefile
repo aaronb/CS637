@@ -99,8 +99,8 @@ mkfs: mkfs.c fs.h
 	gcc $(CFLAGS) -Wall -o mkfs mkfs.c
 
 UPROGS=\
-	_cat\
 	_echo\
+	_forktest\
 	_grep\
 	_init\
 	_kill\
@@ -109,6 +109,7 @@ UPROGS=\
 	_mkdir\
 	_rm\
 	_sh\
+	_usertests\
 	_wc\
 	_zombie\
 	_ticks\
@@ -116,9 +117,6 @@ UPROGS=\
 	_tickets\
 	_ltest\
 	_chktest\
-	
-#_forktest\
-#	_usertests\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img $(UPROGS) README

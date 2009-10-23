@@ -239,7 +239,7 @@ balloc(int used)
   int i;
 
   printf("balloc: first %d blocks have been allocated\n", used);
-  assert(used < BSIZE);
+  assert(used < bitblocks * BPB);   //do not exceed space for bitmap
   bzero(buf, BSIZE);
   for(i = 0; i < used; i++) {
     buf[i/8] = buf[i/8] | (0x1 << (i%8));

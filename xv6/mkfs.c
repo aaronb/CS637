@@ -56,7 +56,7 @@ main(int argc, char *argv[])
   int i, cc, fd;
   uint rootino, inum, off;
   struct dirent de;
-  char buf[512];
+  char buf[BSIZE];
   struct dinode din;
 
   if(argc < 2){
